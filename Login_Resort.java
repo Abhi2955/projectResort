@@ -3,14 +3,18 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import java.io.*;
 import java.sql.*;
+///import java.net.URL;
 class Login_Resort extends Thread implements ActionListener
 {
 	private  Connection connect1,connect2;
 	private Statement state1,state2;
+	private static boolean dbFlag;
 	private static JFrame panelEdiltBill,frameEdiltcategory,frame,welcomeFrame,setUpLoginFrame,forgetPassFrame,mainFrame
-							,panelProducts;
+							,panelProducts,panelSuperAdmin;
 	private static JButton loginButton,forgetpassButton,forgetPassFrame_Ok,forgetPassFrame_Cancel,
 					welcomeContinueButton,setUpNext,setUpBack;
 	private static JPasswordField sequrity_Answer1,sequrity_Answer2,sequrity_Answer3,usernameText,passwordText;
@@ -21,23 +25,26 @@ class Login_Resort extends Thread implements ActionListener
 	private String dataResortName,dataResortContact,dataResortMail,dataResortTin,itemName,addTableName,addProductName;
 	private JMenuBar menuBar;
 	private JPanel panel,editPanel,panelDescription,panelFunction,panelDetail,panelTables,
-					panelCategories,panelActivity,panelBill,panelButton,editCategoryPanel,
+					panelCategories,panelActivity,panelBill,panelButton,editCategoryPanel,superAdminPanel,
 					categoryPanel,editCategoryPanelValues,editCategoryPanelFunction,productPanel,productPanelButt;
 	private JMenu invetory,invoice,hr,admin,setting;
 	private JMenuItem inventoryAddCategory,inventoryAddProduct,inventoryTables,invetoryCategories,invoiceManage,
-					hrManage,settingLogin,settingPassword,settingTax,settingDiscount,adminLogs,adminReport,adminLogOut;
+					hrManage,settingLogin,settingResortInfo,settingPassword,settingTax,settingDiscount,adminLogs,adminReport,
+					adminLogOut,adminRestart,settingAddUser,settingManageUser;
 	private JButton categoryAddNew,categorySave,categoryDeleteButton[],editButton[],buttonTable[],buttonCategries[],
-					buttonPay,buttonCancel,buttonEdit,productAdd,productDelete[],productEdit[],editButtonForEdit[];
-	private int loadTables,loadCategries,loadCategries1,index,resultTable=0,aButton = 0,intAddCat=0,addProductValue=0;
-	private Color tableButtonColor,tableBookedColor;	
+					buttonPay,buttonCancel,buttonEdit,productAdd,productDelete[],productEdit[],editButtonForEdit[],
+					adminInfoButton,resortInfoButton;
+	private int loadTables,loadCategories,loadCategories1,index,resultTable,aButton = 0,intAddCat=0,addProductValue=0;
+	private Color tableButtonColor,tableBookedColor;
 	static Login_Resort loginObject = new Login_Resort();
 	private static Font frameFont = new Font("David",Font.PLAIN,22);
 	private String dataItem,tableName,nameItem[],categoriesNameString[],pressedCategory;
 	private int dataQuantity,indexProduct=1,getIndexNo,prductNo,quanta,items=0,returnItems=0,loadQuantity[],
 				editLeft=25,editTop=50,editHeight=20,editWidth=20,productNo,errorMsgProduct,errorMsgCat,
 				errorMsgEdit;
+	private char userType;
 	private double dataPrice,dataAmount,prize;
-	private JDialog editDialog,editCategoryDialog,productDialog;
+	private JDialog editDialog,editCategoryDialog,productDialog,superAdminDialog;
 	private JLabel editItemLabel[],editQualityLabel[],editTableNameLabel,description,productName[],productPriceValue[];
 	private JScrollPane scrollEditBill,scrollPanel;
 	String nextLineString=" \n", itemString = " Item \n\n",quantityString="Quantity \n\n",priceString = "Price \n\n",
@@ -47,13 +54,21 @@ class Login_Resort extends Thread implements ActionListener
 	private JComboBox <String> listCategory;
 	private double doubleProductValue[];
 	private static Image image = new ImageIcon("z_icon.png").getImage();
+	private static String sequrityQuestionString1 = "who is special person for you ?",
+					sequrityQuestionString2 = "what is your first school name ?"
+					,sequrityQuestionString3 = "what is your favourite color ?",upperChar = "(.*[A-Z].*)",lowerChar = "(.*[a-z].*)",num = "(.*[0-9].*)"
+					,specialChar = "(.*[,~,!,@,#,$,%,^,&,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,.,,,?].*$)";
+	final ImageIcon iconAlert = new ImageIcon("alert.png");
+	final ImageIcon iconError = new ImageIcon("error.png");
+	final ImageIcon iconOk = new ImageIcon("check.png");
+	Validation validObject = new Validation();
 	public void run()
 	{
 		createForgetPassGui();
 		dataBase_Connection1();
 		dataBase_Connection2();
 		loadTablesCategries();
-		mainFrameGui();	
+		mainFrameGui();
 		editBillFrame();
 	}
 
@@ -67,7 +82,7 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		catch(Exception r)
 		{
-		
+
 		}
 	}
 	private void dataBase_Connection2()
@@ -80,32 +95,32 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		catch(Exception r)
 		{
-		
+
 		}
 	}
 	private void incorrect_Username()
 	{
-	JOptionPane.showMessageDialog(frame, "This username is Invalid", "Inalid Username", JOptionPane.ERROR_MESSAGE);
+	JOptionPane.showMessageDialog(frame, "This username is Invalid", "Inalid Username", JOptionPane.ERROR_MESSAGE,iconError);
 	}
 	private void incorrect_Pass()
 	{
-		JOptionPane.showMessageDialog(frame, "Password mismatch from system.\n Enter correct one to login or Change your password", "Invalid Password", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(frame, "Password mismatch from system Or Invalid Password.", "Error Password", JOptionPane.ERROR_MESSAGE,iconError);
 	}
 	private void error_Database_Connection1()
 	{
-		JOptionPane.showMessageDialog(frame, "Please check your connection or it may be server problem", "Connection Error !!!", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(frame, "Please check your connection or it may be server problem", "Connection Error !!!", JOptionPane.ERROR_MESSAGE,iconError);
 		dataBase_Connection1();
 		run();
 	}
 	private void error_Database_Connection2()
 	{
-		JOptionPane.showMessageDialog(frame, "Please check your connection or it may be server problem", "Connection Error !!!", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(frame, "Please check your connection or it may be server problem", "Connection Error !!!", JOptionPane.ERROR_MESSAGE,iconError);
 		dataBase_Connection2();
 		run();
 	}
 	private void error_Empty_Text()
 	{
-		JOptionPane.showMessageDialog(frame, "Please fill the Username and password to login", "Empty Box Error !!!", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(frame, "Please fill the Username and password to login", "Empty Box !!!", JOptionPane.ERROR_MESSAGE,iconAlert);
 	}
 
 	private void loadTablesCategries()
@@ -113,19 +128,34 @@ class Login_Resort extends Thread implements ActionListener
 		dataBase_Connection2();
 		try
 		{
-			ResultSet rs = state2.executeQuery("SELECT tables, categories FROM adminlog");
-			while(rs.next())
+			try
 			{
-				loadTables = rs.getInt("tables");
-				loadCategries = rs.getInt("categories");
+				ResultSet rs = state2.executeQuery("SELECT tables FROM adminlog WHERE type LIKE '"+'s'+"'");
+				while(rs.next())
+				{
+					loadTables = rs.getInt("tables");
+				}
+				rs = state2.executeQuery("SELECT DISTINCT COUNT(*) from categories_list");
+				while(rs.next())
+				{
+					loadCategories = rs.getInt("COUNT(*)");
+				}
+				rs.close();
+				connect2.close();
 			}
-			rs.close();
-			connect2.close();
-			buttonTable = new JButton[loadTables];
-			buttonCategries = new JButton[loadCategries];
+			catch(SQLException sqlExpLoadCat)
+			{
+			}
+			dataAreaTotal.setText("Amount");
+			dataAreaPrice.setText("Price");
+			dataAreaQuantity.setText("Quantity");
+			dataAreaItem.setText("Item");
+			dataAreaTable.setText("No Table ");
+			tableName = "No Table";
 		}
-		catch(Exception load)
+		catch(Exception payExp)
 		{
+
 		}
 	}
 	///
@@ -143,7 +173,7 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		catch(Exception payExp)
 		{
-			
+
 		}
 	}
 	///
@@ -159,7 +189,7 @@ class Login_Resort extends Thread implements ActionListener
 		try
 		{
 			ResultSet rs = state2.executeQuery("SELECT item,quantity,price FROM table_items WHERE booked_table Like '"+tableName+"' ");
-			while(rs.next()) 
+			while(rs.next())
 			{	dataItem = rs.getString("item");
 				dataQuantity = rs.getInt("quantity");
 				dataPrice = rs.getDouble("price");
@@ -176,7 +206,7 @@ class Login_Resort extends Thread implements ActionListener
 				amountString += dataAmount;
 				amountString += nextLineString;
 				dataAreaTotal.setText(amountString);
-				returnItems = items;				
+				returnItems = items;
 			}
 			rs.close();
 			connect2.close();
@@ -184,7 +214,7 @@ class Login_Resort extends Thread implements ActionListener
 		catch (Exception getReloadExp)
 		{
 			error_Database_Connection2();
-		}		
+		}
 	}
 	///
 	private void editBillFrame()
@@ -238,13 +268,13 @@ class Login_Resort extends Thread implements ActionListener
 			loadQuantity[i]=0;
 		}
 		if(items != 0)
-		{	
+		{
 			try
 			{
 				ResultSet ab = state2.executeQuery("SELECT item,quantity From table_items WHERE booked_table Like '"+tableName+"'");
 				while(ab.next())
 				{
-					
+
 						nameItem[errorint] = ab.getString("item");
 						loadQuantity[errorint] = ab.getInt("quantity");
 						errorint++;
@@ -317,7 +347,7 @@ class Login_Resort extends Thread implements ActionListener
 		try
 		{
 			ResultSet rs = state2.executeQuery("SELECT item,quantity,price FROM table_items WHERE booked_table Like '"+tableName+"' ");
-			while(rs.next()) 
+			while(rs.next())
 			{		dataItem = rs.getString("item");
 					dataQuantity = rs.getInt("quantity");
 					dataPrice = rs.getDouble("price");
@@ -336,7 +366,7 @@ class Login_Resort extends Thread implements ActionListener
 					dataAreaTotal.setText(amountString);
 					items++;
 					returnItems = items;
-					editBillFrame();					
+					editBillFrame();
 			}
 			rs.close();
 			connect2.close();
@@ -346,7 +376,7 @@ class Login_Resort extends Thread implements ActionListener
 			error_Database_Connection2();
 		}
 	}
-	///	
+	///
 	private void login()
 	{
 		dataBase_Connection2();
@@ -361,17 +391,22 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else
 		{
-			try 
+			try
 			{
 				ResultSet rs = state2.executeQuery("SELECT username, password FROM adminlog WHERE username Like '"+usernameString+"' ");
-				while(rs.next()) 
+				while(rs.next())
 				{
 					returnUser = rs.getString("username");
 					returnPass = rs.getString("password");
 				}
+				rs = state2.executeQuery("SELECT type FROM adminlog WHERE username LIKE '"+usernameString+"'");
+				while(rs.next())
+				{
+					String userTypeString = rs.getString("type");
+					userType = userTypeString.charAt(0);
+				}
 				rs.close();
 				connect2.close();
-
 				if (returnUser.equals(usernameString))
 				{
 					if(returnPass.equals(passwordString))
@@ -391,16 +426,15 @@ class Login_Resort extends Thread implements ActionListener
 						frame.setVisible(false);
 						mainFrame.setVisible(true);
 					}
-					else 
+					else
 					{
 						incorrect_Pass();
 					}
 				}
-				else 
+				else
 				{
 					incorrect_Username();
 				}
-				
 			}
 			catch(Exception exp)
 			{
@@ -408,6 +442,10 @@ class Login_Resort extends Thread implements ActionListener
 				run();
 			}
 		}
+	}
+	private void errorSuperAdmin()
+	{
+		JOptionPane.showMessageDialog(frame, "You are not a admin. Contact to admin for any kind of changes.", "authentication Error", JOptionPane.ERROR_MESSAGE,iconError);
 	}
 	private void setUpNext_Button()
 	{
@@ -428,59 +466,42 @@ class Login_Resort extends Thread implements ActionListener
 			returnAnswer3 = new String(returnAnswer3Array);
 			returnTableNo = noOfTabels.getText();
 			int tableNo = Integer.parseInt(returnTableNo);
-			int categories = 0;
-			int error = 0;
-			String upperChar = "(.*[A-Z].*)";
-			String lowerChar = "(.*[a-z].*)";
-			String num = "(.*[0-9].*)";
-			String specialChar = "(.*[,~,!,@,#,$,%,^,&,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,.,,,?].*$)";
+			boolean passwordValid;
 			try
 		 	{
 		 	    state1.executeUpdate("DELETE FROM adminlog");
 		    }
 		 	catch(Exception deleteDataBase)
 		    {
-		 	    JOptionPane.showMessageDialog(welcomeFrame,deleteDataBase,"Error",JOptionPane.ERROR_MESSAGE);
+		 	    JOptionPane.showMessageDialog(welcomeFrame,deleteDataBase,"Error",JOptionPane.ERROR_MESSAGE,iconError);
 		 	    dataBase_Connection1();
 		 	}
 
 		 	if(returnUsername.equals("")||returnPassword.equals("")||returnRePassword.equals("")||
 		 	   	returnAnswer1.equals("")||returnAnswer2.equals("")||returnAnswer3.equals(""))
 		 	{
-		 	  	JOptionPane.showMessageDialog(welcomeFrame,"Fill All Details to Continue","Empty Text Error",JOptionPane.ERROR_MESSAGE);
+		 	  	JOptionPane.showMessageDialog(welcomeFrame,"Fill All Details to Continue","Empty Text ",JOptionPane.ERROR_MESSAGE,iconAlert);
 		 	}
 		 	else
 		 	{
 		 	   if(returnPassword.equals(returnRePassword))
 		 	    {
-					if(returnPassword.length()>33||returnPassword.length()<7)
-					{
-						error ++;
-					}
-					if(returnPassword.indexOf(returnUsername)>-1)
-					{
-						error++;
-					}
-					if (!(returnPassword.matches(upperChar)) || !(returnPassword.matches(lowerChar)) || 
-						 !(returnPassword.matches(num)) || !(returnPassword.matches(specialChar)))
-					{
-						error++;
-					}
 					if (tableNo>60)
 					{
-						JOptionPane.showMessageDialog(setUpLoginFrame,"You cannot add more then 60 tables","Error Table ",JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(setUpLoginFrame,"You cannot add more then 60 tables","Alert Table ",JOptionPane.ERROR_MESSAGE,iconAlert);
 					}
 					else
 					{
-						if(!(error == 0))
+						passwordValid = validObject.passwordValidation(returnPassword,returnUsername);
+						if(passwordValid==false)
 						{
-							JOptionPane.showMessageDialog(setUpLoginFrame,"Password formate is invalid\nyour password must be contains:\n1. A Upper Case Character\n2. A Lower Case Character\n3. A special Character and A number \n4.Password And Username must not be same and \n5. password must have 8 to 32 Characters","Password Validation Error",JOptionPane.ERROR_MESSAGE);
+							errorPasswordFormat();
 						}
 						else
 						{
 							try
 							{
-								state1.executeUpdate("insert into adminlog values('"+returnUsername+"','"+returnPassword+"','"+returnAnswer1+"','"+returnAnswer2+"','"+returnAnswer3+"',"+tableNo+","+categories+")");
+								state1.executeUpdate("insert into adminlog values('"+returnUsername+"','"+returnPassword+"','"+returnAnswer1+"','"+returnAnswer2+"','"+returnAnswer3+"',"+tableNo+",'"+'s'+"')");
 								try
 								{
 									String byteString = "true";
@@ -488,25 +509,25 @@ class Login_Resort extends Thread implements ActionListener
         		  					byte byteData[] = byteString.getBytes();
           							nameResort.write(byteData);
           							nameResort.close();
-          							JOptionPane.showMessageDialog(setUpLoginFrame,"Set up is completed,\n Application will be close\nplease Restart this","restart",JOptionPane.INFORMATION_MESSAGE);
+          							JOptionPane.showMessageDialog(setUpLoginFrame,"Set up is completed,\n Application will be close\nplease Restart this","restart",JOptionPane.INFORMATION_MESSAGE,iconOk);
 									System.exit(0);
 								}
 								catch(Exception fileError)
-								{	
-									JOptionPane.showMessageDialog(welcomeFrame,"Error occured  During File Writing","Error File",JOptionPane.ERROR_MESSAGE);
-								}	
+								{
+									JOptionPane.showMessageDialog(welcomeFrame,"Error occured  During File Writing","Error File",JOptionPane.ERROR_MESSAGE,iconError);
+								}
 							}
 							catch(Exception error_exe)
 							{
 								error_Database_Connection1();
-								run(); 
+								run();
 							}
 						}
-					}	
+					}
 	 	    	}
 	 	    	else
 	 	    	{
-		     		JOptionPane.showMessageDialog(setUpLoginFrame,"Password and ReEnter Password Didn't match","Password Mismatch",JOptionPane.ERROR_MESSAGE);
+		     		JOptionPane.showMessageDialog(setUpLoginFrame,"Password and ReEnter Password Didn't match","Password Mismatch",JOptionPane.ERROR_MESSAGE,iconAlert);
 		     	}
 		    }
 		}
@@ -514,6 +535,11 @@ class Login_Resort extends Thread implements ActionListener
 		{
 
 		}
+	}
+	private void errorPasswordFormat()
+	{
+		JOptionPane.showMessageDialog(setUpLoginFrame,"Password format is invalid\nyour password must be contains:\n1. A Upper Case Character\n2. A Lower Case Character\n3. A special Character and A number \n4.Password And Username must not be same and \n5. password must have 8 to 32 Characters",
+										"Password Validation Error",JOptionPane.ERROR_MESSAGE,iconAlert);
 	}
 	///
 	private void addCategoriesPanel()
@@ -524,12 +550,12 @@ class Login_Resort extends Thread implements ActionListener
 			try
 			{
 				int k=0;
-				ResultSet rs = state2.executeQuery("SELECT categories FROM adminlog");
+				ResultSet rs = state2.executeQuery("SELECT DISTINCT COUNT(name_categories) from categories_list");
 				while(rs.next())
 				{
-					loadCategries1 = rs.getInt("categories");
+					loadCategories1 = rs.getInt("COUNT(name_categories)");
 				}
-				rs = state2.executeQuery("SELECT name_categories FROM categories_list");
+				rs = state2.executeQuery("SELECT DISTINCT name_categories FROM categories_list");
 				while(rs.next())
 				{
 					categoriesNameString[k] = rs.getString("name_categories");
@@ -541,32 +567,32 @@ class Login_Resort extends Thread implements ActionListener
 			catch(Exception loadCat)
 			{
 			}
-			categoryDeleteButton = new JButton[loadCategries1];
-			categoryTextAreaPanel = new JTextArea[loadCategries1];
+			categoryDeleteButton = new JButton[loadCategories1];
+			categoryTextAreaPanel = new JTextArea[loadCategories1];
 			frameEdiltcategory = new JFrame();
 			frameEdiltcategory.setVisible(false);
 			editCategoryDialog = new JDialog(mainFrame, "Edit Categories", true);
-			if(loadCategries1<11)
+			if(loadCategories1<11)
 			{
 				editCategoryDialog.setLocation(400,60);
 				editCategoryDialog.setSize(240,550);
 			}
-			else if(loadCategries1<21)
+			else if(loadCategories1<21)
 			{
 				editCategoryDialog.setLocation(300,60);
 				editCategoryDialog.setSize(440,550);
 			}
-			else if(loadCategries1<31)
+			else if(loadCategories1<31)
 			{
 				editCategoryDialog.setLocation(200,60);
 				editCategoryDialog.setSize(665,550);
 			}
-			else if(loadCategries1<41)
+			else if(loadCategories1<41)
 			{
 				editCategoryDialog.setLocation(100,60);
 				editCategoryDialog.setSize(890,550);
 			}
-			else if(loadCategries1<51)
+			else if(loadCategories1<51)
 			{
 				editCategoryDialog.setLocation(45,60);
 				editCategoryDialog.setSize(1115,550);
@@ -581,21 +607,21 @@ class Login_Resort extends Thread implements ActionListener
 			java.net.URL imageURLicon = this.getClass().getResource("delete_Button.png");
 			ImageIcon iconDelete = new ImageIcon(imageURLicon);
 			int countRow=1,countColumn=1;
-			for (int i=0;i<loadCategries1;i++)
+			for (int i=0;i<loadCategories1;i++)
 			{
 				if(i<50)
 				{
 					///
 					if(i==49)
 					{
-						JOptionPane.showMessageDialog(frameEdiltcategory,"This is your Last Entry","Entry Error",JOptionPane.PLAIN_MESSAGE);
+						JOptionPane.showMessageDialog(frameEdiltcategory,"This is your Last Entry","Alert Category",JOptionPane.PLAIN_MESSAGE,iconAlert);
 					}
 					if(countRow<11&&countColumn<7)
 					{
 						categoryTextAreaPanel[i]=new JTextArea();
 						categoryTextAreaPanel[i].setText(categoriesNameString[i]);
-						categoryTextAreaPanel[i].setFont(frameFont);		
-						categoryTextAreaPanel[i].setCaretColor(new Color(255,204,0));			
+						categoryTextAreaPanel[i].setFont(frameFont);
+						categoryTextAreaPanel[i].setCaretColor(new Color(255,204,0));
 						categoryDeleteButton[i] = new JButton(iconDelete);
 						categoryTextAreaPanel[i].setBounds(editLeft,editTop,editWidth+125,editHeight+10);
 						categoryDeleteButton[i].setBounds(150+editLeft,editTop,editWidth+10,editHeight+10);
@@ -613,8 +639,8 @@ class Login_Resort extends Thread implements ActionListener
 						editLeft = editLeft+210;
 						categoryTextAreaPanel[i]=new JTextArea();
 						categoryTextAreaPanel[i].setText(categoriesNameString[i]);
-						categoryTextAreaPanel[i].setFont(frameFont);		
-						categoryTextAreaPanel[i].setCaretColor(new Color(255,204,0));			
+						categoryTextAreaPanel[i].setFont(frameFont);
+						categoryTextAreaPanel[i].setCaretColor(new Color(255,204,0));
 						categoryDeleteButton[i] = new JButton(iconDelete);
 						categoryTextAreaPanel[i].setBounds(editLeft,editTop,editWidth+125,editHeight+10);
 						categoryDeleteButton[i].setBounds(150+editLeft,editTop,editWidth+10,editHeight+10);
@@ -627,7 +653,7 @@ class Login_Resort extends Thread implements ActionListener
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(frameEdiltcategory,"You can Add Maximum 50 Categories","Error Categories",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(frameEdiltcategory,"You can Add Maximum 50 Categories","Error Categories",JOptionPane.ERROR_MESSAGE,iconError);
 				}
 			}
 			editTop = 50;
@@ -640,7 +666,7 @@ class Login_Resort extends Thread implements ActionListener
 			categorySave= new JButton(" Save  ",icon1);
 			categorySave.addActionListener(this);
 			///
-			categorySave.setHorizontalTextPosition(SwingConstants.RIGHT);  
+			categorySave.setHorizontalTextPosition(SwingConstants.RIGHT);
 			editCategoryPanelFunction.add(categorySave,BorderLayout.EAST);
 			editCategoryDialog.add(editCategoryPanel);
 			editCategoryPanel.add(editCategoryPanelValues,BorderLayout.CENTER);
@@ -648,50 +674,40 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else
 		{
-			JOptionPane.showMessageDialog(mainFrame,"Restart Application","Error Restart",JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(mainFrame,"Restart Application","Alert",JOptionPane.ERROR_MESSAGE,iconAlert);
 			System.exit(0);
 		}
 	}
 	///
 	private void addNewCategory()
 	{
-		String categoryString="";
-		int intValue = 0,resultCatValue=0;
-		dataBase_Connection2();
-		try
+		if(userType=='s')
 		{
-			ResultSet rs = state2.executeQuery("SELECT categories FROM adminlog");
-			while(rs.next())
+			String categoryString="";
+			try
 			{
-				resultCatValue = rs.getInt("categories");
-			}
-			rs.close();
-			connect2.close();
-		}
-		catch(Exception loadAddNewCat)
-		{
-		}
-		resultCatValue++;
-		try
-		{
-			categoryString = JOptionPane.showInputDialog(mainFrame,"Input New Category : ");
-			if(!(categoryString.equals("")))
-			{
-					state1.executeUpdate("insert into categories_list values('"+categoryString+"','"+intValue+"') ");
-					state1.executeUpdate("UPDATE adminlog set categories = '"+resultCatValue+"'");
+				categoryString = JOptionPane.showInputDialog(mainFrame,"Input New Category : ");
+				if(!(categoryString.equals("")))
+				{
+					state1.executeUpdate("insert into categories_list values('"+categoryString+"')");
 					if(intAddCat==0)
 					{
-						JOptionPane.showMessageDialog(mainFrame,"Changes Updated Successfully.To keep them Restart Application","Update Data Warning Message",JOptionPane.WARNING_MESSAGE);
+						JOptionPane.showMessageDialog(mainFrame,"Changes Updated Successfully.To keep them Restart Application","Update Data Warning Message",JOptionPane.WARNING_MESSAGE,iconAlert);
 						intAddCat++;
-					}					
+					}
+				}
+				else
+				{
+					JOptionPane.showMessageDialog(mainFrame,"Input a valid Name","Error Category",JOptionPane.ERROR_MESSAGE);
+				}
 			}
-			else
+			catch(Exception addCategoriesExp)
 			{
-				JOptionPane.showMessageDialog(mainFrame,"Input a valid Name","Error Category",JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		catch(Exception addCategoriesExp)
+		else
 		{
+			errorSuperAdmin();
 		}
 	}
 	///
@@ -728,9 +744,9 @@ class Login_Resort extends Thread implements ActionListener
 			productPanel.setAutoscrolls(true);
 			scrollPanel.setPreferredSize(new Dimension(740,550));
 			productDialog.add(scrollPanel);
-			java.net.URL imageURLAdd = this.getClass().getResource("buy_icon.png");
+			java.net.URL imageURLAdd = this.getClass().getResource("save_icon.png");
 			ImageIcon iconAdd = new ImageIcon(imageURLAdd);
-			productAdd= new JButton(" Buy  ",iconAdd);
+			productAdd= new JButton(" Add  ",iconAdd);
 			productAdd.addActionListener(this);
 			productPanelButt.add(productAdd,BorderLayout.EAST);
 			///
@@ -743,16 +759,16 @@ class Login_Resort extends Thread implements ActionListener
 			localLabel[1].setBounds(insetsPanel.left+290,insetsPanel.top,100,30);
 			localLabel[2].setBounds(insetsPanel.left+420,insetsPanel.top,150,30);
 			localLabel[3].setBounds(insetsPanel.left+560,insetsPanel.top,100,30);
-			localLabel[4].setBounds(insetsPanel.left+670,insetsPanel.top,100,30);	
+			localLabel[4].setBounds(insetsPanel.left+670,insetsPanel.top,100,30);
 			for(int i=0;i<5;i++)
-				productPanel.add(localLabel[i]);	
+				productPanel.add(localLabel[i]);
 			try
 			{
 				dataBase_Connection2();
-				ResultSet rs = state2.executeQuery("SELECT productsNumber from categories_list WHERE name_categories LIKE '"+pressedCategory+"'");
+				ResultSet rs = state2.executeQuery("SELECT DISTINCT COUNT(*) from product WHERE category LIKE '"+pressedCategory+"'");
 				while(rs.next())
 				{
-					productNo = rs.getInt("productsNumber");
+					productNo = rs.getInt("COUNT(*)");
 				}
 				productName = new JLabel[productNo];
 				productPriceValue = new JLabel[productNo];
@@ -764,7 +780,7 @@ class Login_Resort extends Thread implements ActionListener
 				stringProductValue = new String[productNo];
 				stringProductPrice = new String[productNo];
 				stringDialogProductName = new String[productNo];
-				rs = state2.executeQuery("SELECT productname,price from product WHERE category LIKE '"+pressedCategory+"'");
+				rs = state2.executeQuery("SELECT DISTINCT productname,price from product WHERE category LIKE '"+pressedCategory+"'");
 				int j=0;
 				while(rs.next())
 				{
@@ -817,60 +833,167 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else
 		{
-			JOptionPane.showMessageDialog(mainFrame,"Restart Application","Error Restart",JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(mainFrame,"Restart Application","Alert",JOptionPane.ERROR_MESSAGE,iconAlert);
 			System.exit(0);
 		}
 		productDialog.setSize(770,450);
 		productDialog.setVisible(true);
 	}
 	///
-	private void addProductName()
+	private void addNewUser()
 	{
-		if(intAddCat==0)
+		String allotaedUsername="",allotedPassword="";
+		JTextField usernameTextField = new JTextField();
+		JTextField passwordTextField = new JTextField();
+		Object components[] = {"Username",usernameTextField,"Password",passwordTextField};
+		JOptionPane newUserOption = new JOptionPane();
+		newUserOption.setMessage(components);
+		newUserOption.setMessageType(JOptionPane.PLAIN_MESSAGE);
+		JDialog newUserDailog = newUserOption.createDialog(null,"Add New User");
+		newUserDailog.setVisible(true);
+		allotaedUsername = usernameTextField.getText();
+		allotedPassword = passwordTextField.getText();
+		///
+		boolean passwordValid;
+		passwordValid=validObject.passwordValidation(allotedPassword,allotaedUsername);
+		if(passwordValid==false)
 		{
-			String productString="",productPriceString="";
-			double priceDouble;
-			int productValue=0;
-			listCategory = new JComboBox <String>(categoriesNameString);
-			productText = new JTextField();
-			productPrice = new JTextField();
-			Object components[] = {"Select Category",listCategory,"New Product Name",productText,"Price ",productPrice};	
-			JOptionPane productOption = new JOptionPane();
-			productOption.setMessage(components);
-			productOption.setMessageType(JOptionPane.PLAIN_MESSAGE);
-			JDialog productDialog = productOption.createDialog(null,"Add Product");
-			productDialog.setVisible(true);
-			///
-			getIndexNo = listCategory.getSelectedIndex();
-			indexString = (String)listCategory.getItemAt(getIndexNo);
-			productString = productText.getText();
-			productPriceString = productPrice.getText();
-			indexProduct = getIndexNo;
+			if(!(allotaedUsername.equals("")||allotedPassword.equals("")))
+			{
+				errorPasswordFormat();
+				addNewUser();
+			}
+		}
+		else
+		{
 			try
 			{
+				state1.executeUpdate("insert into adminlog (username,password,type) values('"+allotaedUsername+"','"+allotedPassword+"','a') ");
+				JOptionPane.showMessageDialog(frame,"User Added Successfully!!","Sucess",JOptionPane.INFORMATION_MESSAGE,iconOk);
+			}
+			catch(Exception adduserExp)
+			{
+				System.out.println(adduserExp);
+			}
+		}
+	}
+	private void superAdminPanel(String typePanel)
+	{
+		String panelType = typePanel;
+		superAdminDialog = new JDialog(mainFrame,panelType,true);;
+		String userpassword="";
+		userpassword = JOptionPane.showInputDialog(frame,"Input your exsiting Password ");
+		if(!(userpassword.equals("")))
+		{
+			if(passwordString.equals(userpassword))
+			{
+				panelSuperAdmin = new JFrame();
+				panelSuperAdmin.setVisible(false);
+				superAdminDialog.setLocation(300,90);
+				superAdminPanel = new JPanel();
+				superAdminPanel.setLayout(null);
+				Insets insetsEdit = superAdminPanel.getInsets();
+				superAdminDialog.add(superAdminPanel);
+				superAdminPanel.setBackground(new java.awt.Color(102,102,102));
+				superAdminPanel.setPreferredSize(new Dimension(500,750));
+				JScrollPane scrollSuperAdmin = new JScrollPane(superAdminPanel);
+				superAdminPanel.setAutoscrolls(true);
+				scrollSuperAdmin.setPreferredSize(new Dimension(500,550));
+				superAdminDialog.add(scrollSuperAdmin);
+				superAdminDialog.setSize(550,450);
+				superAdminDialog.setVisible(true);
+				if(panelType.equals("Setting Logs"))
+				{
+
+				}
+				else if(panelType.equals("Info Resort"))
+				{
+
+				}
+			}
+		}
+		///
+	}
+	private void userUpdate()
+	{
+		String userpassword="",newUsername="";
+		userpassword = JOptionPane.showInputDialog(frame,"Input your exsiting Password");
+		if(!(userpassword.equals("")))
+		{
+			if(passwordString.equals(userpassword))
+			{
+				newUsername = JOptionPane.showInputDialog(frame,"Enter New Username ");
+				try
+				{
+					state1.executeUpdate("UPDATE adminlog SET username='"+newUsername+"' WHERE username LIKE '"+usernameString+"' ");
+					usernameString=newUsername;
+				}
+				catch(Exception userUpdateExp)
+				{
+				}
+			}
+			else
+			{
+				incorrect_Pass();
+			}
+		}
+	}
+	private void addProductName()
+	{
+		if(userType=='s')
+		{
+			try
+			{
+				int tempCatNo=0,k=0;
+				String tempCatName[];
+				dataBase_Connection2();
+				ResultSet rs = state2.executeQuery("SELECT DISTINCT COUNT(*) FROM categories_list");
+				while(rs.next())
+				{
+					tempCatNo = rs.getInt("COUNT(*)");
+				}
+				tempCatName = new String[tempCatNo];
+				for(int i=0; i<tempCatNo;i++)
+				{
+					tempCatName[i]="";
+				}
+				rs = state2.executeQuery("SELECT DISTINCT name_categories FROM categories_list");
+				while(rs.next())
+				{
+					tempCatName[k]=rs.getString("name_categories");
+					k++;
+				}
+				///
+				String productString="",productPriceString="";
+				double priceDouble;
+				listCategory = new JComboBox <String>(tempCatName);
+				productText = new JTextField();
+				productPrice = new JTextField();
+				Object components[] = {"Select Category",listCategory,"New Product Name",productText,"Price ",productPrice};
+				JOptionPane productOption = new JOptionPane();
+				productOption.setMessage(components);
+				productOption.setMessageType(JOptionPane.PLAIN_MESSAGE);
+				JDialog productDialog = productOption.createDialog(null,"Add Product");
+				productDialog.setVisible(true);
+				///
+				getIndexNo = listCategory.getSelectedIndex();
+				indexString = (String)listCategory.getItemAt(getIndexNo);
+				productString = productText.getText();
+				productPriceString = productPrice.getText();
+				indexProduct = getIndexNo;
 				if(!(indexString.equals("") && productPriceString.equals("")))
 				{
 					priceDouble = Double.parseDouble(productPriceString);
-					dataBase_Connection2();
-					ResultSet rs = state2.executeQuery("SELECT productsNumber from categories_list WHERE name_categories LIKE '"+indexString+"'");
-					while(rs.next())
-					{
-						productValue = rs.getInt("productsNumber");
-					}
-					rs.close();
-					connect2.close();
 					state1.executeUpdate("insert into product values ('"+productString+"','"+indexString+"','"+priceDouble+"') ");
-					productValue++;
-					state1.executeUpdate("UPDATE categories_list set productsNumber = '"+productValue+"' WHERE name_categories LIKE '"+indexString+"' ");
 					if(addProductValue==0)
 					{
-						JOptionPane.showMessageDialog(mainFrame,"Changes Updated Successfully.To keep them Restart Application","Update Data Warning Message",JOptionPane.WARNING_MESSAGE);
+						JOptionPane.showMessageDialog(mainFrame,"Changes Updated Successfully","Success Message",JOptionPane.WARNING_MESSAGE,iconOk);
 						addProductValue++;
 					}
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(mainFrame,"Input a valid Entries","Error Entries",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainFrame,"Input a valid Entries","Error Entries",JOptionPane.ERROR_MESSAGE,iconError);
 				}
 			}
 			catch(Exception addProductExp)
@@ -880,17 +1003,16 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else
 		{
-			JOptionPane.showMessageDialog(mainFrame,"Restart Application","Error Restart",JOptionPane.ERROR_MESSAGE);
-			System.exit(0);
+			errorSuperAdmin();
 		}
 	}
 	private void saveCategory()
 	{
 		String returnNameCategories[];
-		returnNameCategories = new String[loadCategries1];
-		for(int i=0;i<loadCategries1;i++)
+		returnNameCategories = new String[loadCategories1];
+		for(int i=0;i<loadCategories1;i++)
 		{
-			returnNameCategories[i] = categoryTextAreaPanel[i].getText(); 
+			returnNameCategories[i] = categoryTextAreaPanel[i].getText();
 			if(!(returnNameCategories[i].equals("")))
 			{
 				if(!(returnNameCategories[i].equals(categoriesNameString[i])))
@@ -947,7 +1069,7 @@ class Login_Resort extends Thread implements ActionListener
 		dataBase_Connection2();
 		char[] adminTextBoxArray = forgetPassFrameUserdata.getPassword();
 		String adminTextBox = new String(adminTextBoxArray);
-		char[] answer1Array = sequrity_Answer01.getPassword(); 
+		char[] answer1Array = sequrity_Answer01.getPassword();
 		String answer1 = new String(answer1Array);
 		char[] answer2Array = sequrity_Answer02.getPassword();
 		String answer2 = new String(answer2Array);
@@ -957,7 +1079,7 @@ class Login_Resort extends Thread implements ActionListener
 		int error=0;
 		if (adminTextBox.equals(""))
 		{
-			JOptionPane.showMessageDialog(forgetPassFrame,"Input your Username","Empty Text Box",JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(forgetPassFrame,"Input your Username","Empty Text Box",JOptionPane.ERROR_MESSAGE,iconAlert);
 		}
 		else
 		{
@@ -976,11 +1098,11 @@ class Login_Resort extends Thread implements ActionListener
 
 			if (!(error == 1))
 			{
-			JOptionPane.showMessageDialog(forgetPassFrame,"Give exact 2 answer of questions","Sequrity Question Error",JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(forgetPassFrame,"Give exact 2 answer of questions","Sequrity Question Alert",JOptionPane.ERROR_MESSAGE,iconAlert);
 			}
 			else
 			{
-				try 
+				try
 				{
 					ResultSet rs = state2.executeQuery("SELECT username,sequrity_Answer1,sequrity_Answer2,sequrity_Answer3 FROM adminlog WHERE username LIKE'"+adminTextBox+"' ");
 					while(rs.next())
@@ -1002,7 +1124,7 @@ class Login_Resort extends Thread implements ActionListener
 							}
 							else
 							{
-								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Error",JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Question Error",JOptionPane.ERROR_MESSAGE,iconError);
 							}
 						}
 						else if(answer2.equals(""))
@@ -1013,9 +1135,9 @@ class Login_Resort extends Thread implements ActionListener
 							}
 							else
 							{
-								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Error",JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Question Error",JOptionPane.ERROR_MESSAGE,iconError);
 							}
-						}	
+						}
 						else if(answer3.equals(""))
 						{
 							if (returnAnswer2.equals(answer2)&&returnAnswer1.equals(answer1))
@@ -1024,7 +1146,7 @@ class Login_Resort extends Thread implements ActionListener
 							}
 							else
 							{
-								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Error",JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(forgetPassFrame,"Sequrity answers Doesn't match!!","Sequrity Question Error",JOptionPane.ERROR_MESSAGE,iconError);
 							}
 						}
 					}
@@ -1035,14 +1157,15 @@ class Login_Resort extends Thread implements ActionListener
 				}
 				catch(Exception exp)
 				{
-					JOptionPane.showMessageDialog(forgetPassFrame,"can't Proceed\nServer Problem Detected","Server Error",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(forgetPassFrame,"can't Proceed\nServer Problem Detected","Server Error",JOptionPane.ERROR_MESSAGE,iconError);
 					dataBase_Connection2();
 				}
-			}			
+			}
 		}
 	}
 	private void welcomeContinue_Button()
 	{
+		int welcomeError=0;
 		String returnOwnerName,returngstinNo,returnContactNo,returnMail;
 		try
 		{
@@ -1062,14 +1185,27 @@ class Login_Resort extends Thread implements ActionListener
 	 	    	}
 	 	    	catch(Exception deleteDataBase)
 	 	    	{
-	 	    		JOptionPane.showMessageDialog(welcomeFrame,deleteDataBase,"Error",JOptionPane.ERROR_MESSAGE);
+	 	    		JOptionPane.showMessageDialog(welcomeFrame,deleteDataBase,"Error",JOptionPane.ERROR_MESSAGE,iconError);
+	 	    	}
+	 	    	boolean mailValid = validObject.emailValidation(returnMail);
+	 	    	boolean numberValid = validObject.contactValidation(returnContactNo);
+	 	    	if(numberValid==false)
+	 	    	{
+	 	    		JOptionPane.showMessageDialog(welcomeFrame,"Enter A Valid Contact No","Invalid Contact",JOptionPane.ERROR_MESSAGE,iconError);
+	 	    		welcomeError++;
+	 	    	}
+	 	    	if(mailValid==false)
+	 	    	{
+	 	    		JOptionPane.showMessageDialog(welcomeFrame,"Enter A Valid Mail Id","Invalid Mail",JOptionPane.ERROR_MESSAGE,iconError);
+	 	    		welcomeError++;
 	 	    	}
 				if (returnResortName.equals("")||returnOwnerName.equals("")
 					||returngstinNo.equals("")||returnContactNo.equals("")||returnMail.equals(""))
 				{
-					JOptionPane.showMessageDialog(welcomeFrame,"Fill All Details to Continue","Empty Text Error",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(welcomeFrame,"Fill All Details to Continue","Empty TextBox ",JOptionPane.ERROR_MESSAGE,iconError);
+					welcomeError++;
 				}
-				else
+				if(welcomeError==0)
 				{
 					state1.executeUpdate("insert into info_resort values('"+returnResortName+"','"+returnOwnerName+"','"+returnContactNo+"','"+returnMail+"','"+returngstinNo+"')");
 					try
@@ -1083,20 +1219,20 @@ class Login_Resort extends Thread implements ActionListener
 						setUpLoginFrame.setVisible(true);
 					}
 					catch(Exception fileError)
-					{	
-						JOptionPane.showMessageDialog(welcomeFrame,"Error occured During File Writing","Error File",JOptionPane.ERROR_MESSAGE);
+					{
+						JOptionPane.showMessageDialog(welcomeFrame,"Error occured During File Writing","Error File",JOptionPane.ERROR_MESSAGE,iconError);
 					}
 				}
 			}
 			catch (Exception expDataBase)
 			{
-				JOptionPane.showMessageDialog(welcomeFrame,"can't Proceed\nServer Problem Detected","Server Error",JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(welcomeFrame,"can't Proceed\nServer Problem Detected","Server Error",JOptionPane.ERROR_MESSAGE,iconError);
 				dataBase_Connection1();
 			}
-		}		
-		catch(Exception fileData) 
+		}
+		catch(Exception fileData)
 		{
-	
+
 		}
 	}
 	private void updatePassword()
@@ -1105,7 +1241,7 @@ class Login_Resort extends Thread implements ActionListener
 		dataBase_Connection2();
 		try
 		{
-			ResultSet rs= state2.executeQuery("SELECT password FROM adminlog");
+			ResultSet rs= state2.executeQuery("SELECT password FROM adminlog WHERE username LIKE '"+usernameString+"' ");
 			while(rs.next())
 			{
 				returnPass = rs.getString("password");
@@ -1128,11 +1264,7 @@ class Login_Resort extends Thread implements ActionListener
 		String newPassword="", reEnterPassword="",returnUserId;
 		returnUserId = thisPass;
 		int error = 0;
-		String upperChar = "(.*[A-Z].*)";
-		String lowerChar = "(.*[a-z].*)";
-		String num = "(.*[0-9].*)";
-		String specialChar = "(.*[,~,!,@,#,$,%,^,&,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,.,,,?].*$)";
-		try 
+		try
 		{
 			newPassword = JOptionPane.showInputDialog(mainFrame,"Enter New Password");
 			if (!(newPassword.equals("")))
@@ -1140,41 +1272,29 @@ class Login_Resort extends Thread implements ActionListener
 				reEnterPassword = JOptionPane.showInputDialog(mainFrame,"ReEnter Password");
 				if (newPassword.equals(reEnterPassword))
 				{
-					if(newPassword.length()>33||newPassword.length()<7)
-					{
-						error ++;
-					}
-					if(newPassword.indexOf(returnUserId)>-1)
-					{
-						error++;
-					}
-					if (!(newPassword.matches(upperChar)) || !(newPassword.matches(lowerChar)) || 
-						 !(newPassword.matches(num)) || !(newPassword.matches(specialChar)))
-					{
-						error++;
-					}
+					boolean passwordValid = validObject.passwordValidation(newPassword,returnUserId);
 
-					if(!(error == 0))
+					if(passwordValid==false)
 					{
-						JOptionPane.showMessageDialog(mainFrame,"Password formate is invalid\nyour password must be contains:\n1. A Upper Case Character\n2. A Lower Case Character\n3. A special Character and A number \n4.Password And Username must not be same and \n5. password must have 8 to 32 Characters","Password Validation Error",JOptionPane.ERROR_MESSAGE);
+						errorPasswordFormat();
 						enterNewPass(returnUserId);
 					}
 					else
 					{
 						try
 						{
-							state1.executeUpdate("UPDATE adminlog SET password = '"+newPassword+"' WHERE username LIKE '"+returnUserId+"'");
-							JOptionPane.showMessageDialog(mainFrame,"Password updated Successfully!!!","Passwrod Updated",JOptionPane.INFORMATION_MESSAGE);
+							state1.executeUpdate("UPDATE adminlog SET password = '"+newPassword+"' WHERE username LIKE '"+usernameString+"'");
+							JOptionPane.showMessageDialog(mainFrame,"Password updated Successfully!!!","Passwrod Updated",JOptionPane.INFORMATION_MESSAGE,iconOk);
 						}
 						catch(Exception error_Forget)
 						{
-							JOptionPane.showMessageDialog(mainFrame,"Can't Update Password\nServer Issue detected","Server Error",JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(mainFrame,"Can't Update Password\nServer Issue detected","Server Error",JOptionPane.ERROR_MESSAGE,iconError);
 						}
 					}
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(mainFrame,"Password doesn't match\ntry again","Password mismatch",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainFrame,"Password doesn't match\ntry again","Password mismatch",JOptionPane.ERROR_MESSAGE,iconError);
 					enterNewPass(returnUserId);
 				}
 			}
@@ -1189,12 +1309,8 @@ class Login_Resort extends Thread implements ActionListener
 		String newPassword="", reEnterPassword="",returnUserId;
 		char[] returnUserIdArray = forgetPassFrameUserdata.getPassword();
 		returnUserId = new String(returnUserIdArray);
-		int error = 0;
-		String upperChar = "(.*[A-Z].*)";
-		String lowerChar = "(.*[a-z].*)";
-		String num = "(.*[0-9].*)";
-		String specialChar = "(.*[,~,!,@,#,$,%,^,&,(,),-,_,=,+,[,{,],},|,;,:,<,>,/,.,,,?].*$)";
-		try 
+		boolean passwordValid;
+		try
 		{
 			newPassword = JOptionPane.showInputDialog(forgetPassFrame,"Enter New Password");
 			if (!(newPassword.equals("")))
@@ -1202,23 +1318,10 @@ class Login_Resort extends Thread implements ActionListener
 				reEnterPassword = JOptionPane.showInputDialog(forgetPassFrame,"ReEnter Password");
 				if (newPassword.equals(reEnterPassword))
 				{
-					if(newPassword.length()>33||newPassword.length()<7)
+					passwordValid = validObject.passwordValidation(newPassword,returnUserId);
+					if(passwordValid==false)
 					{
-						error ++;
-					}
-					if(newPassword.indexOf(returnUserId)>-1)
-					{
-						error++;
-					}
-					if (!(newPassword.matches(upperChar)) || !(newPassword.matches(lowerChar)) || 
-						 !(newPassword.matches(num)) || !(newPassword.matches(specialChar)))
-					{
-						error++;
-					}
-
-					if(!(error == 0))
-					{
-						JOptionPane.showMessageDialog(forgetPassFrame,"Password formate is invalid\nyour password must be contains:\n1. A Upper Case Character\n2. A Lower Case Character\n3. A special Character and A number \n4.Password And Username must not be same and \n5. password must have 8 to 32 Characters","Password Validation Error",JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(forgetPassFrame,"Password formate is invalid\nyour password must be contains:\n1. A Upper Case Character\n2. A Lower Case Character\n3. A special Character and A number \n4.Password And Username must not be same and \n5. password must have 8 to 32 Characters","Password Validation Error",JOptionPane.ERROR_MESSAGE,iconError);
 						updateForgetPass();
 					}
 					else
@@ -1226,7 +1329,7 @@ class Login_Resort extends Thread implements ActionListener
 						try
 						{
 							state1.executeUpdate("UPDATE adminlog SET password = '"+newPassword+"' WHERE username LIKE '"+returnUserId+"'");
-							JOptionPane.showMessageDialog(forgetPassFrame,"Password updated Successfully!!!","Passwrod Updated",JOptionPane.INFORMATION_MESSAGE);
+							JOptionPane.showMessageDialog(forgetPassFrame,"Password updated Successfully!!!","Passwrod Updated",JOptionPane.INFORMATION_MESSAGE,iconOk);
 							usernameText.setText("");
 							passwordText.setText("");
 							usernameString="";
@@ -1235,14 +1338,14 @@ class Login_Resort extends Thread implements ActionListener
 						}
 						catch(Exception error_Forget)
 						{
-							JOptionPane.showMessageDialog(forgetPassFrame,"Can't Update Password\nServer Issue detected","Server Error",JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(forgetPassFrame,"Can't Update Password\nServer Issue detected","Server Error",JOptionPane.ERROR_MESSAGE,iconError);
 							dataBase_Connection1();
 						}
 					}
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(forgetPassFrame,"Password doesn't match\ntry again","Password mismatch",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(forgetPassFrame,"Password doesn't match\ntry again","Password mismatch",JOptionPane.ERROR_MESSAGE,iconError);
 					updateForgetPass();
 				}
 			}
@@ -1250,9 +1353,9 @@ class Login_Resort extends Thread implements ActionListener
 		catch (Exception expforget)
 		{
 
-		}  
+		}
 	}
-	private void forget() 
+	private void forget()
 	{
 		frame.setVisible(false);
 		forgetPassFrame.setVisible(true);
@@ -1269,7 +1372,7 @@ class Login_Resort extends Thread implements ActionListener
 			{
 				if(tablesInt!=0 && tablesInt>0)
 				{
-					state1.executeUpdate("UPDATE adminlog SET tables = '"+tablesInt+"' ");
+					state1.executeUpdate("UPDATE adminlog SET tables = '"+tablesInt+"' WHERE type LIKE '"+'s'+"' ");
 					int dialogButton = JOptionPane.YES_NO_OPTION;
 					int dialogResult = JOptionPane.showConfirmDialog(null,"Changes Updated Successfully.To keep them Restart Application","Update Data Warning Message",dialogButton);
 					if(dialogResult == JOptionPane.YES_OPTION)
@@ -1279,12 +1382,12 @@ class Login_Resort extends Thread implements ActionListener
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(mainFrame,"Please Input A Valid Value","Update Error",JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(mainFrame,"Please Input A Valid Value","Update Error",JOptionPane.ERROR_MESSAGE,iconError);
 				}
 			}
-			else 
+			else
 			{
-				JOptionPane.showMessageDialog(mainFrame,"Please Input A Valid Value","Update Error",JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(mainFrame,"Please Input A Valid Value","Update Error",JOptionPane.ERROR_MESSAGE,iconError);
 			}
 		}
 		catch(Exception updateTablesExp)
@@ -1307,7 +1410,7 @@ class Login_Resort extends Thread implements ActionListener
 				getData("Table "+(resultTable));
 			}
 			productDialog.dispose();
-		}		
+		}
 	}
 	/// Login Frame Declartion
 	private static void loginPaneComponents(Container loginPane)
@@ -1355,7 +1458,7 @@ class Login_Resort extends Thread implements ActionListener
 		Dimension size = usernameLabel.getPreferredSize();
 		usernameLabel.setBounds(395 + insets.left, 245 + insets.top,size.width, size.height);
 		size = usernameText.getPreferredSize();
-		usernameText.setBounds(550 + insets.left, 235+insets.top,size.width, size.height); 
+		usernameText.setBounds(550 + insets.left, 235+insets.top,size.width, size.height);
 		size = passwordLabel.getPreferredSize();
 		passwordLabel.setBounds(395+insets.left, 295+insets.top,size.width, size.height);
 		size = passwordText.getPreferredSize();
@@ -1370,17 +1473,25 @@ class Login_Resort extends Thread implements ActionListener
 		frame = new JFrame(returnResortName);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setIconImage(image);
-		loginPaneComponents(frame.getContentPane());
+		try
+		{
+        	frame.setContentPane(new JLabel(new ImageIcon(ImageIO.read(new File("restro_back.jpg")))));
+        }
+        catch (IOException expBack)
+        {
+        	//expBack.printStackTrace();
+        }
+        loginPaneComponents(frame.getContentPane());
 		frame.setSize(1200,650);
 		frame.setVisible(false);
 		frame.setResizable(false);
 		frame.setLocation(5,5);
 	}
-	/// Main Frame Ends Here 
-	/// Welcome Frame 
+	/// Main Frame Ends Here
+	/// Welcome Frame
 	private static void welcomePaneComponents(Container welcomePane)
 	{
-		
+
 		welcomePane.setLayout(null);
 		Color mainFrameButtonColor = new Color(255,204,51);
 		JLabel resortNameLabel = new JLabel("Resort Name:");
@@ -1450,7 +1561,7 @@ class Login_Resort extends Thread implements ActionListener
 		Dimension size = resortNameLabel.getPreferredSize();
 		resortNameLabel.setBounds(385 + insets.left, 145 + insets.top,size.width, size.height);
 		size = resortName.getPreferredSize();
-		resortName.setBounds(550 + insets.left, 135+insets.top,size.width, size.height); 
+		resortName.setBounds(550 + insets.left, 135+insets.top,size.width, size.height);
 		size = ownerNameLabel.getPreferredSize();
 		ownerNameLabel.setBounds(385+insets.left, 195+insets.top,size.width, size.height);
 		size = ownerName.getPreferredSize();
@@ -1458,7 +1569,7 @@ class Login_Resort extends Thread implements ActionListener
 		size = gstinNoLabel.getPreferredSize();
 		gstinNoLabel.setBounds(385 + insets.left, 245 + insets.top,size.width, size.height);
 		size = gstinNo.getPreferredSize();
-		gstinNo.setBounds(550 + insets.left, 235+insets.top,size.width, size.height); 
+		gstinNo.setBounds(550 + insets.left, 235+insets.top,size.width, size.height);
 		size = contactNoLabel.getPreferredSize();
 		contactNoLabel.setBounds(385+insets.left, 295+insets.top,size.width, size.height);
 		size = contactNo.getPreferredSize();
@@ -1474,6 +1585,11 @@ class Login_Resort extends Thread implements ActionListener
 	{
 		welcomeFrame = new JFrame("Welcome");
 		welcomeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		try
+		{
+        	welcomeFrame.setContentPane(new JLabel(new ImageIcon(ImageIO.read(new File("welcome_back.jpg")))));
+        }
+        catch (IOException expBack) {}
 		welcomeFrame.setIconImage(image);
 		welcomePaneComponents(welcomeFrame.getContentPane());
 		welcomeFrame.setSize(1200,650);
@@ -1481,7 +1597,7 @@ class Login_Resort extends Thread implements ActionListener
 		welcomeFrame.setResizable(false);
 		welcomeFrame.setLocation(5,5);
 	}
-	/// Welcome frame Ends Here 
+	/// Welcome frame Ends Here
 	/// login Id set up Layout Declartion
 	private static void loginSetUpComponents(Container setUpPane)
 	{
@@ -1514,7 +1630,7 @@ class Login_Resort extends Thread implements ActionListener
 		resortRePasswordLabel.setForeground(new java.awt.Color(255,255,255));
 		resortRePassword.setForeground(new java.awt.Color(255,255,255));
 		resortRePassword.setCaretColor(new Color(255,204,0));
-		JLabel sequrity_Question1 = new JLabel("who is special person for you ?");
+		JLabel sequrity_Question1 = new JLabel(sequrityQuestionString1);
 		sequrity_Question1.setFont(frameFont);
 		sequrity_Question1.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer1 = new JPasswordField();
@@ -1523,7 +1639,7 @@ class Login_Resort extends Thread implements ActionListener
 		sequrity_Answer1.setBackground(new java.awt.Color(102,102,102));
 		sequrity_Answer1.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer1.setCaretColor(new Color(255,204,0));
-		JLabel	sequrity_Question2 = new JLabel("what is your first school name ?");
+		JLabel	sequrity_Question2 = new JLabel(sequrityQuestionString2);
 		sequrity_Question2.setFont(frameFont);
 		sequrity_Question2.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer2 = new JPasswordField();
@@ -1532,7 +1648,7 @@ class Login_Resort extends Thread implements ActionListener
 		sequrity_Answer2.setBackground(new java.awt.Color(102,102,102));
 		sequrity_Answer2.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer2.setCaretColor(new Color(255,204,0));
-		JLabel	sequrity_Question3 = new JLabel("what is your favourite color ?");
+		JLabel	sequrity_Question3 = new JLabel(sequrityQuestionString3);
 		sequrity_Question3.setFont(frameFont);
 		sequrity_Question3.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer3 = new JPasswordField();
@@ -1587,7 +1703,7 @@ class Login_Resort extends Thread implements ActionListener
 		size = resortPasswordLabel.getPreferredSize();
 		resortPasswordLabel.setBounds(305 + insets.left, 195 + insets.top,size.width, size.height);
 		size = resortPassword.getPreferredSize();
-		resortPassword.setBounds(600 + insets.left, 185+insets.top,size.width, size.height); 
+		resortPassword.setBounds(600 + insets.left, 185+insets.top,size.width, size.height);
 		size = resortRePasswordLabel.getPreferredSize();
 		resortRePasswordLabel.setBounds(305+insets.left, 245+insets.top,size.width, size.height);
 		size = resortRePassword.getPreferredSize();
@@ -1595,7 +1711,7 @@ class Login_Resort extends Thread implements ActionListener
 		size = sequrity_Question1.getPreferredSize();
 		sequrity_Question1.setBounds(305 + insets.left, 295 + insets.top,size.width, size.height);
 		size = sequrity_Answer1.getPreferredSize();
-		sequrity_Answer1.setBounds(600 + insets.left, 285+insets.top,size.width, size.height); 
+		sequrity_Answer1.setBounds(600 + insets.left, 285+insets.top,size.width, size.height);
 		size = sequrity_Question2.getPreferredSize();
 		sequrity_Question2.setBounds(305+insets.left, 345+insets.top,size.width, size.height);
 		size = sequrity_Answer2.getPreferredSize();
@@ -1618,6 +1734,11 @@ class Login_Resort extends Thread implements ActionListener
 	{
 		setUpLoginFrame = new JFrame(returnResortName);
 		setUpLoginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		try
+		{
+        	setUpLoginFrame.setContentPane(new JLabel(new ImageIcon(ImageIO.read(new File("welcome_back.jpg")))));
+        }
+        catch (IOException expBack) {}
 		setUpLoginFrame.setIconImage(image);
 		loginSetUpComponents(setUpLoginFrame.getContentPane());
 		setUpLoginFrame.setSize(1200,650);
@@ -1625,7 +1746,7 @@ class Login_Resort extends Thread implements ActionListener
 		setUpLoginFrame.setResizable(false);
 		setUpLoginFrame.setLocation(5,5);
 	}
-	/// login Id set up Layout Declartion Ends here 
+	/// login Id set up Layout Declartion Ends here
 	/// forgetPassFrame declartion starts here
 	private static void forgetPassComponents(Container forgetPassPane)
 	{
@@ -1634,9 +1755,9 @@ class Login_Resort extends Thread implements ActionListener
 		forgetPassPane.setBackground(new java.awt.Color(102,102,102));
 		JLabel forgetPassFrameUserName = new JLabel("User Name:");
 		JLabel tempLabel = new JLabel("Answer any two questions :");
-		JLabel sequrity_Question1 = new JLabel("who is special person for you ?");
-		JLabel sequrity_Question2 = new JLabel("what is your first school name ?");
-		JLabel sequrity_Question3 = new JLabel("what is your favourite color ?");
+		JLabel sequrity_Question1 = new JLabel(sequrityQuestionString1);
+		JLabel sequrity_Question2 = new JLabel(sequrityQuestionString2);
+		JLabel sequrity_Question3 = new JLabel(sequrityQuestionString3);
 		forgetPassFrameUserdata = new JPasswordField();
 		sequrity_Answer01 = new JPasswordField();
 		sequrity_Answer02 = new JPasswordField();
@@ -1657,11 +1778,11 @@ class Login_Resort extends Thread implements ActionListener
 		sequrity_Answer01.setPreferredSize(new Dimension(200,30));
 		sequrity_Answer02.setPreferredSize(new Dimension(200,30));
 		sequrity_Answer03.setPreferredSize(new Dimension(200,30));
-		tempLabel.setForeground(new java.awt.Color(255,255,255));
-		forgetPassFrameUserName.setForeground(new java.awt.Color(255,255,255));
-		sequrity_Question1.setForeground(new java.awt.Color(255,255,255));
-		sequrity_Question2.setForeground(new java.awt.Color(255,255,255));
-		sequrity_Question3.setForeground(new java.awt.Color(255,255,255));
+		tempLabel.setForeground(new java.awt.Color(0,0,0));
+		forgetPassFrameUserName.setForeground(new java.awt.Color(0,0,0));
+		sequrity_Question1.setForeground(new java.awt.Color(0,0,0));
+		sequrity_Question2.setForeground(new java.awt.Color(0,0,0));
+		sequrity_Question3.setForeground(new java.awt.Color(0,0,0));
 		forgetPassFrameUserdata.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer01.setForeground(new java.awt.Color(255,255,255));
 		sequrity_Answer02.setForeground(new java.awt.Color(255,255,255));
@@ -1725,6 +1846,11 @@ class Login_Resort extends Thread implements ActionListener
 		forgetPassFrame = new JFrame(returnResortName);
 		forgetPassFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		forgetPassFrame.setIconImage(image);
+		try
+		{
+        	forgetPassFrame.setContentPane(new JLabel(new ImageIcon(ImageIO.read(new File("forget_pass.jpg")))));
+        }
+        catch (IOException expBackPass) {}
 		forgetPassComponents(forgetPassFrame.getContentPane());
 		forgetPassFrame.setSize(1200,650);
 		forgetPassFrame.setVisible(false);
@@ -1734,7 +1860,7 @@ class Login_Resort extends Thread implements ActionListener
 	/// Forget Pass frame Ends Here
 	/// Main Frame Define
 	public void mainFrameGui()
-	{	
+	{
 		tableButtonColor = new Color(102,204,255);
 		tableBookedColor = new Color(255,102,102);
 		menuBar = new JMenuBar();
@@ -1786,6 +1912,11 @@ class Login_Resort extends Thread implements ActionListener
 		settingLogin.addActionListener(this);
 		setting.add(settingLogin);
 		//setting.addSeparator();
+		settingResortInfo = new JMenuItem("Update Resort Info");
+		settingResortInfo.setAccelerator(KeyStroke.getKeyStroke('Z',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+		settingResortInfo.addActionListener(this);
+		setting.add(settingResortInfo);
+		///
 		settingPassword = new JMenuItem("Update Password");
 		settingPassword.setAccelerator(KeyStroke.getKeyStroke('U',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		settingPassword.addActionListener(this);
@@ -1800,11 +1931,20 @@ class Login_Resort extends Thread implements ActionListener
 		settingTax.setAccelerator(KeyStroke.getKeyStroke('S',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		settingTax.addActionListener(this);
 		setting.add(settingTax);
+		settingAddUser = new JMenuItem("Add User");
+		settingAddUser.setAccelerator(KeyStroke.getKeyStroke('J',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+		settingAddUser.addActionListener(this);
+		setting.add(settingAddUser);
+		settingManageUser = new JMenuItem("Manage User");
+		settingManageUser.setAccelerator(KeyStroke.getKeyStroke('M',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+		settingManageUser.addActionListener(this);
+		setting.add(settingManageUser);
+		///
 		admin = new JMenu("Admin");
 		admin.setMnemonic(KeyEvent.VK_A);
 		menuBar.add(admin);
 		adminLogs =new JMenuItem("Logs");
-		adminLogs.setAccelerator(KeyStroke.getKeyStroke('A',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+		adminLogs.setAccelerator(KeyStroke.getKeyStroke('V',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		adminLogs.addActionListener(this);
 		admin.add(adminLogs);
 		//admin.addSeparator();
@@ -1816,16 +1956,20 @@ class Login_Resort extends Thread implements ActionListener
 		adminLogOut.setAccelerator(KeyStroke.getKeyStroke('O',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		adminLogOut.addActionListener(this);
 		admin.add(adminLogOut);
-		/// panel Layout 
+		adminRestart = new JMenuItem("Restart");
+		adminRestart.setAccelerator(KeyStroke.getKeyStroke('E',Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+		adminRestart.addActionListener(this);
+		admin.add(adminRestart);
+		/// panel Layout
 		panel= new JPanel();
 		panel.setLayout(new GridLayout(2,1));
 		panel.setOpaque(true);
-		/// function layout 
+		/// function layout
 		panelFunction = new JPanel();
 		panelFunction.setLayout(new GridLayout(1,2));
 		panelFunction.setOpaque(true);
 		panel.add(panelFunction);
-		/// 
+		///
 		panelTables = new JPanel();
 		panelTables.setOpaque(true);
 		if(loadTables<16)
@@ -1852,6 +1996,8 @@ class Login_Resort extends Thread implements ActionListener
 		///
 		int count =0, leftSide=10, topSide=5, buttonWidth = 180, buttonHeight = 80;
 		Insets insets = panelTables.getInsets();
+		buttonTable = new JButton[loadTables];
+		buttonCategries = new JButton[loadCategories];
 		for(int i=0;i<loadTables;++i)
 		{
 			int j = i+1;
@@ -1881,15 +2027,15 @@ class Login_Resort extends Thread implements ActionListener
 		///
 		panelCategories = new JPanel();
 		panelCategories.setOpaque(true);
-		if (loadCategries<21)
+		if (loadCategories<21)
 		{
 			panelCategories.setPreferredSize(new Dimension(400,470));
 		}
-		else if (loadCategries<41)
+		else if (loadCategories<41)
 		{
 			panelCategories.setPreferredSize(new Dimension(400,950));
 		}
-		else if (loadCategries<61)
+		else if (loadCategories<61)
 		{
 			panelCategories.setPreferredSize(new Dimension(400,1390));
 		}
@@ -1901,18 +2047,18 @@ class Login_Resort extends Thread implements ActionListener
 		panelFunction.add(scrollPanelCategories);
 		int countCat =0, leftSideCat=7, topSideCat=10, buttonWidthCat = 105, buttonHeightCat = 105;
 		Insets inset = panelCategories.getInsets();
-		for(int i=0;i<loadCategries;i++)
+		for(int i=0;i<loadCategories;i++)
 		{
 			dataBase_Connection2();
-			categoriesNameString = new String[loadCategries];
-			for(int j=0;j<loadCategries;j++)
+			categoriesNameString = new String[loadCategories];
+			for(int j=0;j<loadCategories;j++)
 			{
 				categoriesNameString[j]="";
 			}
 			try
 			{
 				int k=0;
-				ResultSet rs = state2.executeQuery("SELECT name_categories FROM categories_list");
+				ResultSet rs = state2.executeQuery("SELECT DISTINCT name_categories FROM categories_list");
 				while(rs.next())
 				{
 					categoriesNameString[k] = rs.getString("name_categories");
@@ -1925,7 +2071,7 @@ class Login_Resort extends Thread implements ActionListener
 			{
 				System.out.println(categoriesExp);
 			}
-			buttonCategries[i] = new JButton(categoriesNameString[i]);		
+			buttonCategries[i] = new JButton(categoriesNameString[i]);
 			buttonCategries[i].addActionListener(this);
 			buttonCategries[i].setBackground(tableButtonColor);
 			panelCategories.add(buttonCategries[i]);
@@ -1957,7 +2103,7 @@ class Login_Resort extends Thread implements ActionListener
 			}
 		}
 		panelCategories.setBackground(new java.awt.Color(102,102,102));
-		/// Detail Layout 
+		/// Detail Layout
 		panelDetail = new JPanel();
 		panelDetail.setOpaque(true);
 		panelDetail.setLayout(new FlowLayout());
@@ -2029,19 +2175,17 @@ class Login_Resort extends Thread implements ActionListener
 		buttonEdit.addActionListener(this);
 		panelButton.setBackground(new java.awt.Color(102,102,102));
 		panelButton.setPreferredSize(new Dimension(300,300));
-		/// End Layout 
-		description = new JLabel("Powered By: PITSOL");
+		/// End Layout
+		description = new JLabel("Powered By: AndroWeb Techno Solution");
 		description.setFont(frameFont);
 		panelDescription = new JPanel();
 		panelDescription.setOpaque(true);
 		panelDescription.setBackground(new java.awt.Color(255,102,102));
 		panelDescription.add(description);
-		
-	
 		mainFrame = new JFrame(returnResortName);
 		mainFrame.add(panel,BorderLayout.CENTER);
 		mainFrame.add(panelDescription,BorderLayout.PAGE_END);
-		mainFrame.setJMenuBar(menuBar);		
+		mainFrame.setJMenuBar(menuBar);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setIconImage(image);
 		mainFrame.setSize(1200,650);
@@ -2050,13 +2194,13 @@ class Login_Resort extends Thread implements ActionListener
 		mainFrame.setLocation(5,5);
 		mainFrame.addWindowListener(new AreYouSure());
 	}
-	/// Main Frame Defination Ends Here 
-	/// Window Listener 
+	/// Main Frame Defination Ends Here
+	/// Window Listener
 	 private class AreYouSure extends WindowAdapter
     {
       public void windowClosing( WindowEvent e )
       {
-			JOptionPane.showMessageDialog(mainFrame,"Press Ok to close Application\nYour All temp data will be lost","Warning",JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(mainFrame,"Press Ok to close Application\nYour All temp data will be lost","Warning",JOptionPane.WARNING_MESSAGE,iconAlert);
 			try
 			{
 				state1.executeUpdate("DELETE FROM table_items");
@@ -2086,7 +2230,7 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else if (ae.getSource()==welcomeContinueButton)
 		{
-			welcomeContinue_Button();	
+			welcomeContinue_Button();
 		}
 		else if(ae.getSource()==setUpNext)
 		{
@@ -2125,16 +2269,30 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else if (ae.getSource() == inventoryTables)
 		{
-			updateTables();
+			if(userType=='s')
+			{
+				updateTables();
+			}
+			else
+			{
+				errorSuperAdmin();
+			}
 		}
 		else if(ae.getSource() == invetoryCategories)
 		{
-			addCategoriesPanel();
-			editCategoryDialog.setVisible(true);
+			if(userType=='s')
+			{
+				addCategoriesPanel();
+				editCategoryDialog.setVisible(true);
+			}
+			else
+			{
+				errorSuperAdmin();
+			}
 		}
 		else if(ae.getSource() == invoiceManage)
 		{
-			
+
 		}
 		else if(ae.getSource() == hrManage)
 		{
@@ -2142,7 +2300,25 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else if(ae.getSource() == settingLogin)
 		{
-			
+			if(userType=='s')
+			{
+				superAdminPanel("Setting Logs");
+			}
+			else
+			{
+				userUpdate();
+			}
+		}
+		else if(ae.getSource()==settingResortInfo)
+		{
+			if(userType=='s')
+			{
+				superAdminPanel("Info Resort");
+			}
+			else
+			{
+				errorSuperAdmin();
+			}
 		}
 		else if(ae.getSource() == settingPassword)
 		{
@@ -2150,23 +2326,50 @@ class Login_Resort extends Thread implements ActionListener
 		}
 		else if(ae.getSource() == settingTax)
 		{
-			
+
 		}
 		else if(ae.getSource() == settingDiscount)
 		{
-			
+
+		}
+		else if(ae.getSource()==settingAddUser)
+		{
+			if(userType=='s')
+			{
+				addNewUser();
+			}
+			else
+			{
+				errorSuperAdmin();
+			}
+		}
+		else if(ae.getSource()==settingManageUser)
+		{
+			if(userType=='s')
+			{
+
+			}
+			else
+			{
+				errorSuperAdmin();
+			}
 		}
 		else if(ae.getSource() == adminLogs)
 		{
-			
+
 		}
 		else if(ae.getSource() == adminReport)
 		{
-			 
+
 		}
 		else if(ae.getSource() == adminLogOut)
 		{
 			loginFrameLogout();
+		}
+		else if (ae.getSource()== adminRestart)
+		{
+			JOptionPane.showMessageDialog(mainFrame,"Application is close","Message Close",JOptionPane.PLAIN_MESSAGE,iconAlert);
+			System.exit(0);
 		}
 		for (int i=0;i<loadTables;i++)
 		{
@@ -2182,9 +2385,9 @@ class Login_Resort extends Thread implements ActionListener
 					dataAreaTotal.setText(amountString);
 					getData("Table "+(resultTable));
 				}
-			
+
 		}
-		for (int i=0;i<loadCategries;i++)
+		for (int i=0;i<loadCategories;i++)
 		{
 			if(ae.getSource() == buttonCategries[i])
 			{
@@ -2196,7 +2399,7 @@ class Login_Resort extends Thread implements ActionListener
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(mainFrame,"First Select A table \nthen choose a category ","Warning",JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(mainFrame,"First Select A table \nthen choose a category ","Warning",JOptionPane.WARNING_MESSAGE,iconAlert);
 				}
 			}
 		}
@@ -2241,91 +2444,96 @@ class Login_Resort extends Thread implements ActionListener
 		{
 			if(ae.getSource()== productDelete[i])
 			{
-				String nameProduct = productName[i].getText();
-				String categoryName = productDialog.getTitle();
-				int productNumber=0;
-				try
+				if(userType=='s')
 				{
-					dataBase_Connection2();
-					ResultSet rs = state2.executeQuery("SELECT productsNumber FROM categories_list WHERE name_categories Like '"+categoryName+"' ");
-					while(rs.next())
+					String nameProduct = productName[i].getText();
+					String categoryName = productDialog.getTitle();
+					try
 					{
-						productNumber = rs.getInt("productsNumber");
-					}
-					rs.close();
-					connect2.close();
-					if(errorMsgProduct==0)
-					{
-						int dialogButton = JOptionPane.YES_NO_OPTION;
-						int dialogResult = JOptionPane.showConfirmDialog(null,"Press Yes to Delete From System","Delete Warning",dialogButton);
-						if(dialogResult == JOptionPane.YES_OPTION)
+						if(errorMsgProduct==0)
+						{
+							int dialogButton = JOptionPane.YES_NO_OPTION;
+							int dialogResult = JOptionPane.showConfirmDialog(null,"Press Yes to Delete From System","Delete Warning",dialogButton);
+							if(dialogResult == JOptionPane.YES_OPTION)
+							{
+								state1.executeUpdate("DELETE FROM product WHERE productname LIKE '"+nameProduct+"' AND category LIKE '"+categoryName+"' ");
+								errorMsgProduct++;
+								productName[i].setVisible(false);
+								productPriceValue[i].setVisible(false);
+								productValue[i].setVisible(false);
+								productDelete[i].setVisible(false);
+								productEdit[i].setVisible(false);
+								productDialog.dispose();
+								showProductPanel(categoryName);
+							}
+						}
+						else
 						{
 							state1.executeUpdate("DELETE FROM product WHERE productname LIKE '"+nameProduct+"' AND category LIKE '"+categoryName+"' ");
-							errorMsgProduct++;
 							productName[i].setVisible(false);
 							productPriceValue[i].setVisible(false);
 							productValue[i].setVisible(false);
 							productDelete[i].setVisible(false);
 							productEdit[i].setVisible(false);
-							productNumber--;
-							state1.executeUpdate("UPDATE categories_list SET productsNumber = '"+productNumber+"' WHERE name_categories LIKE '"+categoryName+"' ");
+							productDialog.dispose();
+							showProductPanel(categoryName);
 						}
 					}
-					else
+					catch(Exception expDeleteProduct)
 					{
-						state1.executeUpdate("DELETE FROM product WHERE productname LIKE '"+nameProduct+"' AND category LIKE '"+categoryName+"' ");
-						productName[i].setVisible(false);
-						productPriceValue[i].setVisible(false);
-						productValue[i].setVisible(false);
-						productDelete[i].setVisible(false);
-						productEdit[i].setVisible(false);
-						productNumber--;
-						state1.executeUpdate("UPDATE categories_list SET productsNumber = '"+productNumber+"' WHERE name_categories LIKE '"+categoryName+"' ");
 					}
 				}
-				catch(Exception expDeleteProduct)
+				else
 				{
-					System.out.println(expDeleteProduct);
+					errorSuperAdmin();
 				}
+
 			}
 			else if(ae.getSource()==productEdit[i])
 			{
-				int returnVal = 0;
-				String stringLocalName = productName[i].getText();
-				String stringLocalPrice = productPriceValue[i].getText();
-				String localPanelName = productDialog.getTitle();
-				JTextField editProduct = new JTextField(stringLocalName);
-				JTextField editPrice = new JTextField(stringLocalPrice);
-				Object components[] = {"Product Name",editProduct,"Product Price",editPrice};
-				JOptionPane productOption = new JOptionPane();
-				productOption.setMessage(components);
-				productOption.setMessageType(JOptionPane.PLAIN_MESSAGE);
-				JDialog localProductDialog = productOption.createDialog(null,"Edit Product :"+stringLocalName);
-				localProductDialog.setVisible(true);
-				String afterClickName = editProduct.getText();
-				String afterClickPrice = editPrice.getText();
-				try
-				{	
-					if(!(stringLocalName.equals(afterClickName)))
-					{
-						state1.executeUpdate("UPDATE product SET productname = '"+afterClickName+"' WHERE productname LIKE '"+stringLocalName+"'");
-						returnVal++;
-					}
-					if(!(stringLocalPrice.equals(afterClickPrice)))
-					{
-						double afterClickValue = Double.parseDouble(afterClickPrice);
-						state1.executeUpdate("UPDATE product SET price = '"+afterClickValue+"' WHERE productname LIKE '"+afterClickName+"'");
-						returnVal++;
-					}
-				}
-				catch(Exception editProductExp)
+				if(userType=='s')
 				{
-					
+					int returnVal = 0;
+					String stringLocalName = productName[i].getText();
+					String stringLocalPrice = productPriceValue[i].getText();
+					String localPanelName = productDialog.getTitle();
+					JTextField editProduct = new JTextField(stringLocalName);
+					JTextField editPrice = new JTextField(stringLocalPrice);
+					Object components[] = {"Product Name",editProduct,"Product Price",editPrice};
+					JOptionPane productOption = new JOptionPane();
+					productOption.setMessage(components);
+					productOption.setMessageType(JOptionPane.PLAIN_MESSAGE);
+					JDialog localProductDialog = productOption.createDialog(null,"Edit Product :"+stringLocalName);
+					localProductDialog.setVisible(true);
+					String afterClickName = editProduct.getText();
+					String afterClickPrice = editPrice.getText();
+					try
+					{
+						if(!(stringLocalName.equals(afterClickName)))
+						{
+							state1.executeUpdate("UPDATE product SET productname = '"+afterClickName+"' WHERE productname LIKE '"+stringLocalName+"'");
+							returnVal++;
+						}
+						if(!(stringLocalPrice.equals(afterClickPrice)))
+						{
+							double afterClickValue = Double.parseDouble(afterClickPrice);
+							state1.executeUpdate("UPDATE product SET price = '"+afterClickValue+"' WHERE productname LIKE '"+afterClickName+"'");
+							returnVal++;
+						}
+					}
+					catch(Exception editProductExp)
+					{
+
+					}
+					if(returnVal!=0)
+					{
+						productDialog.dispose();
+						showProductPanel(localPanelName);
+					}
 				}
-				if(returnVal!=0)
-				{	
-					productDialog.dispose();
-					showProductPanel(localPanelName);
+				else
+				{
+					errorSuperAdmin();
 				}
 			}
 		}
@@ -2365,7 +2573,7 @@ class Login_Resort extends Thread implements ActionListener
 							editButtonForEdit[i].setVisible(false);
 							reLoadBill();
 						}
-					}	
+					}
 					catch(Exception editExpButton)
 					{
 					}
@@ -2403,26 +2611,10 @@ class Login_Resort extends Thread implements ActionListener
 			saveCategory();
 		}
 
-		for(int i=0;i<loadCategries1;i++)
+		for(int i=0;i<loadCategories1;i++)
 		{
 		if(ae.getSource()==categoryDeleteButton[i])
 			{
-				int updateCat=0;
-				dataBase_Connection2();
-				try
-				{
-					ResultSet rs = state2.executeQuery("SELECT categories FROM adminlog");
-					while(rs.next())
-					{
-						updateCat = rs.getInt("categories");
-					}
-					rs.close();
-					connect2.close();
-				}
-				catch(Exception delCatExp)
-				{
-				}
-				updateCat--;
 				String deleteCat = categoryTextAreaPanel[i].getText();
 				categoryTextAreaPanel[i].setText("");
 				try
@@ -2435,7 +2627,6 @@ class Login_Resort extends Thread implements ActionListener
 						{
 							state1.executeUpdate("DELETE FROM categories_list WHERE name_categories LIKE '"+deleteCat+"' ");
 							state1.executeUpdate ("DELETE FROM product WHERE category LIKE '"+deleteCat+"' ");
-							state1.executeUpdate("UPDATE adminlog SET categories='"+updateCat+"'");
 							errorMsgCat++;
 							categoryTextAreaPanel[i].setVisible(false);
 							categoryDeleteButton[i].setVisible(false);
@@ -2445,26 +2636,32 @@ class Login_Resort extends Thread implements ActionListener
 					{
 						state1.executeUpdate("DELETE FROM categories_list WHERE name_categories LIKE '"+deleteCat+"' ");
 						state1.executeUpdate ("DELETE FROM product WHERE category LIKE '"+deleteCat+"' ");
-						state1.executeUpdate("UPDATE adminlog SET categories='"+updateCat+"'");
 						categoryTextAreaPanel[i].setVisible(false);
 						categoryDeleteButton[i].setVisible(false);
 					}
-				}	
+				}
 				catch(Exception expDelCat)
 				{
 
-				}			
+				}
 			}
 		}
 	}
-	public static void main(String[] args) 
+
+	Login_Resort()
 	{
-		 javax.swing.SwingUtilities.invokeLater(new Runnable() 
-		 {             
-		 	public void run() 
-		 	{       
+		super("Resort Thread");
+		start();
+	}
+
+	public static void main(String[] args)
+	{
+		 javax.swing.SwingUtilities.invokeLater(new Runnable()
+		 {
+		 	public void run()
+		 	{
 		 		String fdatas="",fileData="";
-		 		try 
+		 		try
 		 		{
 		 			FileInputStream fin = new FileInputStream("resortName.txt");
               		int size=fin.available();
@@ -2472,13 +2669,13 @@ class Login_Resort extends Thread implements ActionListener
               		fin.read(b);
               		returnResortName=fdatas=new String(b);
               		fin.close();
-		 		} 
+		 		}
 		 		catch(Exception fileOpen)
 		 		{
 
-		 		}      
+		 		}
 
-		 		try 
+		 		try
 		 		{
 		 			FileInputStream fin = new FileInputStream("resortSetUp.txt");
               		int size=fin.available();
@@ -2486,7 +2683,7 @@ class Login_Resort extends Thread implements ActionListener
               		fin.read(b);
               		fileData=new String(b);
               		fin.close();
-		 		} 
+		 		}
 		 		catch(Exception fileOpen)
 		 		{
 
@@ -2494,10 +2691,20 @@ class Login_Resort extends Thread implements ActionListener
 
 		 		if (fdatas.equals(""))
 		 		{
+		 			DbExsit dbExsit = new DbExsit();
+		 			dbFlag=dbExsit.isDbExsit();
+		 			if(dbFlag==true)
+		 			{
+
+		 			}
+		 			else
+		 			{
+
+		 			}
 		 		    createWelcomeGui();
 		 		    welcomeFrame.setVisible(true);
 		 		    createSetUpGui();
-		 		    createLoginGui();	    
+		 		    createLoginGui();
 		 		}
 		 		else
 		 		{
@@ -2514,11 +2721,6 @@ class Login_Resort extends Thread implements ActionListener
 		 			}
 		 		}
 		 	}
-		 }); 
-	}
-	Login_Resort()
-	{
-		super("Resort Thread");
-		start(); 
+		 });
 	}
 }
